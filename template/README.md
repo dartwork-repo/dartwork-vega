@@ -4,7 +4,7 @@
 1. HTML 기본 구성 `<head>`, `<body>`, `<script>`
 2. CDN
 3. JSON
-4. JavaScrip의 fetch 함수
+4. JavaScript의 fetch 함수
 5. [vega-embed](https://github.com/vega/vega-embed): 목적만 참고
 6. [Vega View API](https://vega.github.io/vega/docs/api/view/): 목적만 참고
 7. 웹브라우저 개발자도구
