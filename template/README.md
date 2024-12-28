@@ -5,8 +5,9 @@
 2. CDN
 3. JSON
 4. JavaScrip의 fetch 함수
-5. [vega-embed](https://github.com/vega/vega-embed)
-6. [Vega View API](https://vega.github.io/vega/docs/api/view/)
+5. [vega-embed](https://github.com/vega/vega-embed): 목적만 참고
+6. [Vega View API](https://vega.github.io/vega/docs/api/view/): 목적만 참고
+7. 웹브라우저 개발자도구
 
 ## 1. 구성 요소
 
@@ -112,3 +113,7 @@ HTML속 JavaScript를 활용하는 두가지 이유가 있습니다.
 4. `index.html`파일은 웹브라우저로 실행하거나 새로고침해서 시각화 결과 확인
 
 코드를 수정할때마다 새로고침 하는 것이 귀찮으면 VSCode Extension인 `Live Server`를 설치한 뒤 html파일을 우클릭해서 `Open with Live Server`를 클릭하면 됩니다. 그럼 파일이 변경된 것이 감지되면 자동으로 새로고침을 수행합니다.
+
+프린트되는 로그 등을 확인하고 싶다면 브라우저에서 F12를 눌러서 개발자 도구를 클릭한 뒤 Console 텝에 가서 확인하면 됩니다.
+
+![](assets/console.png)
