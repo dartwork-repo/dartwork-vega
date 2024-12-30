@@ -63,7 +63,8 @@ Vega 시각화를 이용한 하나의 그래프는 하나의 폴더로 관리되
 ```
 
 ### 2-2. `index.vl.json` 
-시각화에 필요한 Vega-Lite 스펙을 작성한 JSON파일입니다. VSCode 에서 JSON에 `$schema`가 등록되어 있으면 인텔리센스나 벨리데이션이 작동하여 좀 더 쉽게 Vega-Lite Spec을 작성할 수 있습니다. 아래는 예시입니다. encoding property에서 정의된 항목에 대한 자세한 설명은 [vega-lite docs](https://vega.github.io/vega-lite/docs)를 참조하세요.  
+시각화에 필요한 Vega-Lite 스펙을 작성한 JSON파일입니다. VSCode 에서 JSON에 `$schema`가 등록되어 있으면 인텔리센스나 벨리데이션이 작동하여 좀 더 쉽게 Vega-Lite Spec을 작성할 수 있습니다. 아래는 예시이며 encoding property에 정의된 항목에 대한 자세한 설명은 [vega-lite docs](https://vega.github.io/vega-lite/docs)를 참조하세요.  
+
 ```
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -218,7 +219,7 @@ HTML속 JavaScript를 활용하는 두가지 이유가 있습니다.
 
 ## 3. 사용 방법     
 ### 기본 사용법     
-고급 사용자가 아니면 다음의 사용법을 추천합니다.
+고급 사용자가 아니면 다음 사용법을 추천합니다.
 1. **`template` 폴더 복사**  
    프로젝트를 시작할 때 템플릿 폴더를 복사합니다.
 
@@ -226,7 +227,7 @@ HTML속 JavaScript를 활용하는 두가지 이유가 있습니다.
    `data` 폴더에 데이터를 넣습니다.
 
 3. **설정 파일 수정**  
-   `index.vl.json`에서 데이터 파일 경로를 수정합니다.
+   `index.vl.json`에서 데이터 파일 경로와 시각화 스펙을 모두 수정합니다.
 
 4. **결과 확인**  
    `index.html`을 웹브라우저에서 열어 결과를 확인합니다.
