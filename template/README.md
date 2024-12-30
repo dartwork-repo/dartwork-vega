@@ -1,13 +1,27 @@
-# Vega 개발 환경
+# Vega 개발 환경 설명 
 
-필요 사전 지식
-1. HTML 기본 구성 `<head>`, `<body>`, `<script>`
-2. CDN
-3. JSON
-4. JavaScript의 fetch 함수
-5. [vega-embed](https://github.com/vega/vega-embed): 목적만 참고
-6. [Vega View API](https://vega.github.io/vega/docs/api/view/): 목적만 참고
-7. 웹브라우저 개발자도구
+## 사전에 알아두면 좋은 개념
+1. **HTML 기본 구성**  
+   웹페이지를 만드는 데 사용하는 언어입니다. `<head>`는 페이지 설정, `<body>`는 화면에 보이는 내용을 담습니다. `<script>`는 JavaScript 코드를 삽입하는 데 사용됩니다.
+
+2. **CDN**  
+   Content Delivery Network의 약자로, 외부 서버에서 필요한 파일(예: Vega 라이브러리)을 가져오는 방법입니다.
+
+3. **JSON**  
+   데이터를 저장하고 주고받는 데 사용하는 간단한 형식입니다. 예를 들어, `{"name": "John", "age": 30}`처럼 데이터를 표현합니다.
+
+4. **JavaScript의 fetch 함수**  
+   데이터를 가져오기 위해 사용하는 기능입니다. 웹사이트에서 데이터를 불러오는 데 자주 사용됩니다.
+
+5. **[vega-embed](https://github.com/vega/vega-embed)**  
+   Vega 그래프를 쉽게 웹페이지에 표시할 수 있도록 돕는 도구입니다.
+
+6. **[Vega View API](https://vega.github.io/vega/docs/api/view/)**  
+   Vega 그래프를 JavaScript로 제어할 때 사용하는 도구입니다.
+
+7. **웹브라우저 개발자 도구**  
+   F12를 누르면 열리는 도구입니다. 웹페이지의 코드를 보고 문제를 찾거나 실행 중인 코드를 확인할 수 있습니다.
+
 
 ## 1. 구성 요소
 
