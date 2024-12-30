@@ -213,7 +213,8 @@ HTML속 JavaScript를 활용하는 두가지 이유가 있습니다.
 2. Vega-Spec을 통하여 랜더링 한 결과와 상호작용할 수 있음 (View API와 JavaScript 코드 활용해야 함)
 
 2의 경우 직접 HTML Element나 Event를 직접 처리해서 더 강력한 상호작용을 구현할 수 있습니다 (`D3.js` 처럼).
-<br>
+
+<br>   
 
 ## 3. 사용 방법     
 ### 기본 사용법     
