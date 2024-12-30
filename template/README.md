@@ -38,38 +38,111 @@ Vega 시각화를 이용한 하나의 그래프는 하나의 폴더로 관리되
 ```      
 각 폴더와 파일에 대한 설명은 다음과 같습니다. 
 
-- **`data` 폴더**  
+- **`data` folder**  
   시각화에 사용할 데이터를 저장하고 불러오기 위한 폴더입니다. 파일 형식은 CSV, JSON 등 Vega가 지원하는 모든 형식이 가능합니다.
 
-- **`vega` 폴더**  
+- **`vega` folder**  
   Vega와 관련된 JavaScript 파일이 저장되어 있습니다. 이는 `vega`, `vega-lite`, `vega-embed`의 기능이 구현된 JavaScript파일을 포함합니다. 인터넷이 연결된 경우에는 이 폴더를 사용할 필요가 없고 대부분의 경우 이 폴더를 수정할 일은 없습니다. 
 
-- **`index.vl.json` 파일**  
+- **`index.vl.json` file**  
   Vega-Lite 시각화의 설정(Spec)을 담은 JSON 파일입니다. 시각화의 종류, 데이터 바인딩, 축 설정, 스타일 등을 지정합니다.
 
-- **`index.html` 파일**  
+- **`index.html` file**  
    시각화를 웹 브라우저에 렌더링하기 위한 HTML 파일입니다. Vega-Lite 라이브러리를 로드하고 index.vl.json 파일을 읽어들여 시각화를 생성합니다.
 <br>
 
-## 2. 구성 설명
 
-### 2-1. `data`
-시각화에 필요한 데이터를 저장합니다. Vega가 지원하는 어떤 형식도 가능합니다. 일반적으로 `index.vl.json`에서 `url`로 사용됩니다.
+## 2. 구성 요소 상세 설명 
 
-### 2-2. `index.vl.json`
-시각화에 필요한 Vega-Lite 스펙을 작성한 JSON파일입니다. VSCode 에서 JSON에 `$schema`가 등록되어 있으면 인텔리센스나 벨리데이션이 작동하여 좀 더 쉽게 Vega-Lite Spec을 작성할 수 있습니다. 아래는 자동완성의 예시입니다.
-
-
-![자동 완성 예시](assets/intellisense.png)
-
-Vega-Lite 스펙을 HTML안에 작성할 수도 있으나 인텔리센스나 벨리데이션을 활용하기 위하여 JSON으로 분리하였습니다.
-
-또한 2-1에서 설명한 것과 같이 위 JSON파일에서 데이터를 로드합니다.
+### 2-1. `data` folder
+시각화에 필요한 데이터를 저장합니다. Vega가 지원하는 어떤 형식도 가능합니다. 일반적으로 `index.vl.json`에서 다음과 같이 `url`로 정의하여 불러옵니다. 
 ```json
-    "data": {
-      "url": "data/my_data.csv"
-    },
+"data": {
+  "url": "data/my_data.csv"
+}
 ```
+
+### 2-2. `index.vl.json` file
+시각화에 필요한 Vega-Lite 스펙을 작성한 JSON파일입니다. VSCode 에서 JSON에 `$schema`가 등록되어 있으면 인텔리센스나 벨리데이션이 작동하여 좀 더 쉽게 Vega-Lite Spec을 작성할 수 있습니다. 아래는 예시입니다. 각각에 encoding property에 대한 설명은 [vega-lite docs](https://vega.github.io/vega-lite/docs)를 참조하세요.  
+```
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "An enhanced bar chart with multiple encodings.",
+  "data": {
+    "url": "data/my_data.csv"
+  },
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "a",
+      "type": "ordinal",
+      "axis": {
+        "title": "Category",
+        "labelAngle": 0
+      }
+    },
+    "y": {
+      "field": "b",
+      "type": "quantitative",
+      "axis": {
+        "title": "Value",
+        "grid": true
+      }
+    },
+    "color": {
+      "field": "c",
+      "type": "nominal",
+      "legend": {
+        "title": "Subcategory",
+        "orient": "top"
+      }
+    },
+    "tooltip": [
+      {
+        "field": "a",
+        "type": "ordinal",
+        "title": "Category"
+      },
+      {
+        "field": "b",
+        "type": "quantitative",
+        "title": "Value"
+      },
+      {
+        "field": "c",
+        "type": "nominal",
+        "title": "Subcategory"
+      }
+    ],
+    "opacity": {
+      "field": "importance",
+      "type": "quantitative",
+      "scale": {
+        "domain": [0, 1]
+      },
+      "legend": {
+        "title": "Importance"
+      }
+    },
+    "size": {
+      "field": "frequency",
+      "type": "quantitative",
+      "scale": {
+        "range": [10, 100]
+      },
+      "legend": {
+        "title": "Frequency"
+      }
+    }
+  }
+}
+```
+
+Vega-Lite 스펙을 HTML안에 작성할 수도 있으나 인텔리센스(IntelliSense: 코드를 빠르고 정확하게 작성하도록 돕는 자동 완성 기능)와 밸리데이션(Validation: 코드가 규칙과 스펙을 잘 따르고 있는지 확인하는 오류 감지 기능)을 활용하기 위하여 JSON으로 분리하였습니다. 항상 이 방식에 기반해 코드 작성할 것을 추천합니다. 
+다음은 코드 작성 시 IntelliSense의 예시입니다. 
+![IntelliSense 예시](assets/intellisense.png)
+
+
 ### 2-3. `index.html`
 실제로 시각화 작동에 필요한 HTML 파일입니다.
 
