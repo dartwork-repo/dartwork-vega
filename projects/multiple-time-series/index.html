@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Embedding Vega-Lite with Dynamic Signal State and Data Selector</title>
+    <!-- 인터넷이 연결된 경우 아래 주석 처리된 CDN 주소를 사용하면 됩니다. -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script> -->
+
+    <!-- 인터넷이 연결되지 않은 경우 로컬에 다운로드한 파일을 사용하면 됩니다. -->
+    <script src="vega/vega@5.30.0.js"></script>
+    <script src="vega/vega-lite@5.21.0.js"></script>
+    <script src="vega/vega-embed@6.26.0.js"></script>
+    <style>
+      .button-container {
+        margin: 10px 0;
+      }
+      button {
+        margin-right: 10px;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+      select {
+        margin-left: 10px;
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Vega-Lite Visualization</h1>
+    <h2>Dynamic Data Selector and Signal State</h2>
+
+    <!-- 데이터 선택을 위한 드롭다운 메뉴 -->
+    <div>
+       <label for="dataSelector">데이터 파일 선택:</label>
+      <select id="dataSelector"></select>
+    </div>
+
+    <div class="button-container">
+      <button onclick="saveToFile()">파라미터 파일로 저장</button>
+      <input type="file" id="loadFile" style="display: none" onchange="loadFromFile(event)">
+      <button onclick="document.getElementById('loadFile').click()">파일에서 파라미터 불러오기</button>
+    </div>
+
+    <br/><br/>
+
+    <div id="vis"></div>
+
+    <script>
+      let currentView = null;
+      let currentSpec = null;
+      let dataUrl = '';  // 기본 데이터 URL 초기화
+
+      const dataSelector = document.getElementById('dataSelector');
+
+      // 'files.txt' 파일을 fetch로 읽어 데이터 파일 목록을 가져옵니다.
+      fetch('data/files.txt')
+        .then(response => response.text())
+        .then(content => {
+          const fileNames = content.split('\n').map(line => line.trim()).filter(line => line); // 파일 목록 생성
+          updateSelector(fileNames);  // 파일 목록으로 select 박스 업데이트
+        })
+        .catch(error => {
+          console.error('Error loading files.txt:', error);
+        });
+
+      // select 박스를 데이터 파일 목록으로 업데이트하는 함수
+      function updateSelector(fileNames) {
+        dataSelector.innerHTML = '';  // 기존 옵션 제거
+
+        // 파일 목록을 기반으로 select 박스에 옵션 추가
+        fileNames.forEach(file => {
+          const option = document.createElement('option');
+          option.value = file;
+          option.textContent = file;
+          dataSelector.appendChild(option);
+        });
+
+        // 첫 번째 데이터 파일로 기본값 설정
+        if (fileNames.length > 0) {
+          dataUrl = `data/${fileNames[0]}`;
+          loadVegaSpec();  // 첫 번째 데이터 파일로 시각화 로딩
+        }
+      }
+
+      // 데이터 선택 박스의 이벤트 리스너 설정
+      dataSelector.addEventListener('change', function(event) {
+        dataUrl = `data/${event.target.value}`;  // 선택된 데이터 파일 URL 업데이트
+        loadVegaSpec();  // 선택된 데이터로 Vega 시각화 로딩
+      });
+
+      // 파라미터 상태 로드
+      function loadParamState() {
+        const savedState = localStorage.getItem('vegaParamState');
+        if (savedState) {
+          return JSON.parse(savedState);
+        }
+        return {};
+      }
+
+      // 파라미터 상태 저장
+      function saveParamState(params) {
+        localStorage.setItem('vegaParamState', JSON.stringify(params));
+      }
+
+      // 파라미터 파일로 저장
+      function saveToFile() {
+        const state = loadParamState();
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'vega-parameters.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // 파라미터 파일 로딩
+      function loadFromFile(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const params = JSON.parse(e.target.result);
+              saveParamState(params);
+              updateVisualization(params);
+            } catch (error) {
+              console.error('Error parsing parameter file:', error);
+              alert('파라미터 파일 형식이 올바르지 않습니다.');
+            }
+          };
+          reader.readAsText(file);
+        }
+      }
+
+      // 시각화 업데이트
+      function updateVisualization(params) {
+        if (!currentSpec || !currentView) return;
+        
+        // spec의 파라미터 업데이트
+        if (currentSpec.params) {
+          currentSpec.params.forEach(param => {
+            if (params[param.name] !== undefined) {
+              param.value = params[param.name];
+            }
+          });
+        }
+
+        // 시각화 다시 렌더링
+        vegaEmbed('#vis', currentSpec).then(result => {
+          currentView = result.view;
+
+          // 시그널 리스너 다시 연결
+          if (currentSpec.params) {
+            currentSpec.params.forEach(param => {
+              currentView.addSignalListener(param.name, function(name, value) {
+                const currentState = loadParamState();
+                currentState[name] = value;
+                saveParamState(currentState);
+              });
+            });
+          }
+        });
+      }
+
+      // Vega Spec 로딩
+      function loadVegaSpec() {
+        fetch('index.vl.json')
+          .then(response => response.json())
+          .then(spec => {
+            currentSpec = spec;
+            const savedState = loadParamState();
+            
+            if (spec.params) {
+              spec.params.forEach(param => {
+                if (savedState[param.name] !== undefined) {
+                  param.value = savedState[param.name];
+                }
+              });
+            }
+
+            // 데이터 URL 업데이트
+            spec.data.url = dataUrl;
+            
+            // Vega Embed를 사용하여 시각화 생성
+            vegaEmbed('#vis', spec)
+              .then(result => {
+                currentView = result.view;
+                console.log('Vega Embed Result:', result);
+                console.log('Vega View:', currentView);
+
+                // 시그널 리스너 연결
+                if (spec.params) {
+                  spec.params.forEach(param => {
+                    currentView.addSignalListener(param.name, function(name, value) {
+                      const currentState = loadParamState();
+                      currentState[name] = value;
+                      saveParamState(currentState);
+                    });
+                  });
+                }
+              })
+              .catch(error => {
+                console.error('Vega Embed Error:', error);
+              });
+          })
+          .catch(error => {
+            console.error('Error loading JSON:', error);
+          });
+      }
+
+      // 페이지 로딩 시 첫 번째 데이터로 시각화 로딩
+      loadVegaSpec();
+    </script>
+  </body>
+</html>
