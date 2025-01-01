@@ -233,7 +233,7 @@ HTML속 JavaScript를 활용하는 두가지 이유가 있습니다.
     VSCode Extension인 `Live Server` 확장을 설치하고 HTML 파일을 우클릭한 뒤 `Open with Live Server`를 선택하세요. 그럼 파일이 변경된 것이 감지될 때마다 자동으로 새로고침을 수행합니다. 또한 `Live Server`에서 연 HTML은 로컬 파일을 읽을 수 있습니다. 우리의 경우 JSON과 CSV를 파일시스템에서 로딩하기 때문에 이러한 기능이 필요합니다. 
    
 ### 추가 팁     
-2. **JavaScript 코드 작동 결과 확인**     
+1. **JavaScript 코드 작동 결과 확인**     
    브라우저에서 F12를 누르고 'Console' 탭에서 에러 메시지 등 프린트 되는 로그를 확인하세요.
 ![](assets/console.png)
 
