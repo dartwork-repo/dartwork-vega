@@ -6,8 +6,8 @@
   "width": 250,
   "yTitle": "Validation loss [%]",
   "height": 180,
-  "xLabelFontSize": 12,
-  "bid": "0",
-  "bestColor": "#251bb1",
-  "worstColor": "#ff5900"
+  "xLabelFontSize": 10,
+  "bid": "1",
+  "bestColor": "#1bb1a0",
+  "worstColor": "#0084ff"
 }
