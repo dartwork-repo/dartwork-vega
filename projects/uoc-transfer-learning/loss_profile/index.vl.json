@@ -1,0 +1,337 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "A simple bar chart with embedded data.",
+  "params": [
+    {
+      "name": "lineWidth",
+      "value": 0.2,
+      "bind": {
+        "input": "range",
+        "min": 0.1,
+        "max": 1,
+        "step": 0.1
+      }
+    },
+    {
+      "name": "bestColor",
+      "value": "red",
+      "bind": {
+        "input": "color"
+      }
+    },
+    {
+      "name": "worstColor",
+      "value": "blue",
+      "bind": {
+        "input": "color"
+      }
+    },
+    {
+      "name": "width",
+      "value": 800,
+      "bind": {
+        "input": "range",
+        "min": 100,
+        "max": 1000,
+        "step": 50
+      }
+    },
+    {
+      "name": "height",
+      "value": 200,
+      "bind": {
+        "input": "range",
+        "min": 100,
+        "max": 400,
+        "step": 10
+      }
+    },
+    {
+      "name": "xLabelFontSize",
+      "value": 14,
+      "bind": {
+        "input": "range",
+        "min": 10,
+        "max": 20,
+        "step": 1
+      }
+    },
+    {
+      "name": "bid",
+      "value": "0",
+      "bind": {
+        "input": "select",
+        "options": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "16",
+          "17",
+          "18",
+          "19",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31",
+          "33",
+          "34",
+          "35",
+          "37",
+          "38",
+          "40",
+          "41",
+          "42",
+          "44",
+          "45",
+          "46",
+          "47",
+          "48",
+          "51",
+          "55",
+          "56",
+          "62",
+          "63",
+          "64",
+          "65",
+          "68",
+          "69",
+          "72",
+          "73",
+          "74",
+          "75",
+          "76",
+          "77",
+          "78",
+          "79",
+          "80",
+          "81",
+          "82",
+          "83",
+          "84",
+          "85",
+          "86",
+          "87",
+          "88",
+          "89",
+          "90",
+          "93",
+          "94",
+          "95",
+          "96",
+          "97",
+          "98",
+          "101",
+          "102",
+          "106",
+          "107",
+          "110",
+          "111",
+          "112",
+          "113",
+          "114",
+          "116",
+          "117",
+          "119",
+          "120"
+        ]
+      }
+    }
+  ],
+  "width": {
+    "signal": "width"
+  },
+  "height": {
+    "signal": "height"
+  },
+  "data": {
+    "name": "myData",
+    "url": "data/transfer_learning.csv"
+  },
+  "transform": [
+    {
+      "filter": "datum.bid == bid"
+    },
+    {
+      "calculate": "toNumber(datum.n_targets)",
+      "as": "n_targets_num"
+    },
+    {
+      "aggregate": [
+        {
+          "op": "mean",
+          "field": "best_val_loss",
+          "as": "val_loss"
+        }
+      ],
+      "groupby": [
+        "n_targets_num",
+        "mode"
+      ]
+    },
+    {
+      "pivot": "mode",
+      "value": "val_loss",
+      "groupby": [
+        "n_targets_num"
+      ]
+    },
+    {
+      "window": [
+        {
+          "field": "none",
+          "op": "mean",
+          "as": "mean_val_none"
+        }
+      ],
+      "frame": [
+        null,
+        null
+      ]
+    },
+    {
+      "calculate": "datum.best / datum.mean_val_none * 100",
+      "as": "best_percent"
+    },
+    {
+      "calculate": "datum.worst / datum.mean_val_none * 100",
+      "as": "worst_percent"
+    },
+    {
+      "fold": [
+        "best_percent",
+        "worst_percent"
+      ],
+      "as": [
+        "mode",
+        "val_loss"
+      ]
+    }
+  ],
+  "encoding": {
+    "x": {
+      "field": "n_targets_num",
+      "type": "quantitative",
+      "axis": {
+        "title": "Number of source buildings",
+        "titleFontSize": 14,
+        "labelFontSize": {
+         "signal": "xLabelFontSize"
+        }
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "line",
+        "strokeWidth": 1.2,
+        "point": {
+          "filled": true,
+          "size": 50
+        }
+      },
+      "encoding": {
+        "y": {
+          "field": "val_loss",
+          "type": "quantitative",
+          "axis": {
+            "title": "Validation loss [%]",
+            "titleFontSize": 14
+          },
+          "scale": {
+            "domain": [
+              0, 100
+            ]
+          }
+        },
+        "color": {
+          "field": "mode",
+          "scale": {
+            "range": [
+              {
+                "expr": "bestColor"
+              },
+              {
+                "expr": "worstColor"
+              }
+            ]
+          },
+          "legend": {
+            "title": "",
+            "labelExpr": "datum.label === 'best_percent' ? 'Closest sources' : 'Farthest sources'",
+            "orient": "bottom-left",
+            "columns": 1,
+            "symbolSize": 20,
+            "padding": -5
+          }
+        }
+      }
+    },
+    {
+      "data": {
+        "name": "myRuleData",
+        "values": [
+          {"y": 99.9}
+        ]
+      },
+      "encoding": {
+        "x": null
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "rule",
+            "color": "gray",
+            "strokeDash": [2, 2]
+          },
+          "encoding": {
+            "y": {
+              "field": "y",
+              "type": "quantitative"
+            }
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "color": "gray",
+            "dy": 5,
+            "baseline": "top"
+          },
+          "encoding": {
+            "y": {
+              "field": "y",
+              "type": "quantitative"
+            },
+            "text": {
+              "value": "No TL"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "config": {
+    "axis": {
+      "grid": false
+    }
+  }
+}

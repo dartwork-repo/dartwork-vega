@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- 문서의 제목을 설정합니다. -->
+    <title>Embedding Vega-Lite with Dynamic Signal State and Data Selector</title>
+
+    <!-- 아래의 주석 처리된 부분은 인터넷 연결이 있을 경우 사용할 수 있는 외부 파일들을 불러옵니다. -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.21.0"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script> -->
+
+    <!-- 아래는 로컬 환경에서 외부 파일을 사용할 경우에 사용할 코드입니다. -->
+    <script src="vega/vega@5.30.0.js"></script>
+    <script src="vega/vega-lite@5.21.0.js"></script>
+    <script src="vega/vega-embed@6.26.0.js"></script>
+
+    <!-- 페이지에서 사용할 스타일을 정의합니다 (예: 버튼의 모양, 위치 등). -->
+    <style>
+      .button-container {
+        margin: 10px 0;  /* 버튼들 사이에 여백을 줍니다. */
+      }
+      button {
+        margin-right: 10px;  /* 버튼들 사이에 오른쪽 여백을 줍니다. */
+        padding: 8px 16px;  /* 버튼에 내부 여백을 줍니다. */
+        cursor: pointer;  /* 마우스를 버튼 위에 올리면 손 모양 커서로 변경됩니다. */
+      }
+      select {
+        margin-left: 10px;  /* 드롭다운 메뉴 왼쪽에 여백을 줍니다. */
+        padding: 8px;  /* 드롭다운 메뉴에 내부 여백을 줍니다. */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 페이지의 제목을 표시합니다. -->
+    <h1>Vega-Lite Visualization</h1>
+    <h2>Dynamic Data Selector and Signal State</h2>
+
+    <!-- 데이터 파일을 선택할 수 있는 드롭다운 메뉴를 만듭니다. -->
+    <div>
+      <label for="dataSelector">데이터 파일 선택:</label>  <!-- 드롭다운 메뉴에 대한 설명을 표시합니다. -->
+      <select id="dataSelector"></select>  <!-- 실제 드롭다운 메뉴입니다. 선택할 수 있는 데이터 파일 목록이 여기에 표시됩니다. -->
+      <!-- 선택할 수 있는 옵션은 JavaScript 코드에서 자동으로 추가됩니다. -->
+    </div>
+
+    <div class="button-container">
+      <!-- 사용자가 파라미터를 저장할 수 있는 버튼을 만듭니다. -->
+      <!-- 버튼을 클릭하면 saveToFile 함수가 작동하여 다운로드창이 나옵니다. -->
+      <button onclick="saveToFile()">파라미터 파일로 저장</button>
+      <!-- 사용자가 파일을 업로드하여 파라미터를 불러올 수 있는 버튼입니다. -->
+      <input type="file" id="loadFile" style="display: none" onchange="loadFromFile(event)"> <!-- 파일을 선택하는 입력 필드입니다. 숨겨져 있습니다. -->
+      <button onclick="document.getElementById('loadFile').click()">파일에서 파라미터 불러오기</button>  <!-- 버튼을 클릭하면 파일 선택 필드를 열도록 합니다. -->
+    </div>
+
+    <br/><br/>
+
+    <!-- 시각화 결과가 표시될 곳입니다. -->
+    <div id="vis"></div>
+
+    <script>
+      let currentView = null;  // 현재 시각화된 뷰를 저장할 변수입니다.
+      let currentSpec = null;  // Vega-Lite의 시각화 사양(spec)을 저장할 변수입니다.
+      let dataUrl = '';  // 선택된 데이터 파일의 URL을 저장할 변수입니다.
+
+      // 'dataSelector'라는 드롭다운 메뉴를 참조합니다.
+      // 위에서 만든 드롭다운 메뉴에 데이터 파일 목록을 추가할 것입니다.
+      const dataSelector = document.getElementById('dataSelector');
+
+      // 'data/files.txt' 파일을 불러와서 데이터를 선택할 수 있는 목록을 만듭니다.
+      fetch('data/files.txt')
+        .then(response => response.text())  // 텍스트 형식으로 데이터를 읽어옵니다.
+        .then(content => {
+          const fileNames = content.split('\n')  // 파일 목록을 줄 단위로 나눕니다.
+            .map(line => line.trim())  // 각 줄의 앞뒤 공백을 제거합니다.
+            .filter(line => line);  // 빈 줄은 제외합니다.
+          // 파일 목록을 드롭다운 메뉴에 업데이트합니다.
+          // 아래에 정의된 updateSelector 함수를 호출합니다.
+          updateSelector(fileNames);  
+        })
+        .catch(error => {
+          // 에러가 나면 콘솔에 에러 메시지를 출력합니다.
+          console.error('Error loading files.txt:', error);  
+        });
+
+      // 드롭다운 메뉴를 데이터 파일 목록으로 업데이트하는 함수입니다.
+      function updateSelector(fileNames) {
+        dataSelector.innerHTML = '';  // 드롭다운 메뉴를 초기화합니다.
+
+        // 파일 목록을 이용해서 드롭다운 메뉴에 옵션을 추가합니다.
+        fileNames.forEach(file => {
+          const option = document.createElement('option');  // 새로운 옵션을 만듭니다.
+          option.value = file;  // 옵션의 값으로 파일 이름을 설정합니다.
+          option.textContent = file;  // 옵션의 텍스트로 파일 이름을 설정합니다.
+          dataSelector.appendChild(option);  // 드롭다운 메뉴에 추가합니다.
+        });
+
+        // 첫 번째 데이터 파일을 기본으로 선택하고, 그에 맞춰 시각화를 로드합니다.
+        if (fileNames.length > 0) {
+          dataUrl = `data/${fileNames[0]}`;  // 첫 번째 파일의 경로를 설정합니다.
+          loadVegaSpec();  // 첫 번째 파일로 시각화를 로드합니다.
+        }
+      }
+
+      // 드롭다운 메뉴에서 선택된 데이터 파일에 맞춰 시각화를 업데이트하는 이벤트 리스너입니다.
+      dataSelector.addEventListener('change', function(event) {
+        dataUrl = `data/${event.target.value}`;  // 선택된 데이터 파일의 URL을 업데이트합니다.
+        loadVegaSpec();  // 선택된 데이터로 시각화를 로드합니다.
+      });
+
+      // 저장된 파라미터 상태를 로드하는 함수입니다.
+      function loadParamState() {
+        // localStorage는 웹 브라우저에서 제공하는 기능 중 하나로, 브라우저에 데이터를 영구적으로
+        // 저장할 수 있게 해줍니다. 이 데이터는 페이지를 새로고침하거나 브라우저를 닫았다가 다시 
+        // 열어도 계속 남아 있습니다. 즉, 사용자가 브라우저를 닫았다 다시 열더라도 저장된 데이터는
+        // 유지됩니다. 이는 사용자가 웹 페이지를 다시 방문했을 때 이전 상태를 기억하고 복원할 수 
+        // 있도록 돕습니다.
+        const savedState = localStorage.getItem('vegaParamState');  // 로컬 저장소에서 파라미터 상태를 불러옵니다.
+        if (savedState) {
+          return JSON.parse(savedState);  // 불러온 상태를 JSON으로 파싱해서 반환합니다.
+        }
+        return {};  // 저장된 상태가 없다면 빈 객체를 반환합니다.
+      }
+
+      // 파라미터 상태를 로컬 저장소에 저장하는 함수입니다.
+      function saveParamState(params) {
+        localStorage.setItem('vegaParamState', JSON.stringify(params));  // 파라미터를 JSON 형태로 로컬 저장소에 저장합니다.
+      }
+
+      // 파라미터를 파일로 저장하는 함수입니다.
+      function saveToFile() {
+        const state = loadParamState();  // 저장된 파라미터 상태를 불러옵니다.
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });  // JSON 형식으로 Blob 객체를 생성합니다.
+        const url = URL.createObjectURL(blob);  // Blob을 URL로 변환합니다.
+        const a = document.createElement('a');  // 다운로드 링크를 생성합니다.
+        a.href = url;  // 링크의 주소를 Blob URL로 설정합니다.
+        a.download = 'vega-parameters.json';  // 다운로드할 파일 이름을 설정합니다.
+        document.body.appendChild(a);  // 링크를 페이지에 추가합니다.
+        a.click();  // 다운로드를 시작합니다.
+        document.body.removeChild(a);  // 다운로드 후 링크를 페이지에서 제거합니다.
+        URL.revokeObjectURL(url);  // Blob URL을 해제합니다.
+      }
+
+      // 파일에서 파라미터를 불러오는 함수입니다.
+      function loadFromFile(event) {
+        const file = event.target.files[0];  // 선택된 파일을 가져옵니다.
+        if (file) {
+          const reader = new FileReader();  // 파일 리더 객체를 생성합니다.
+          reader.onload = function(e) {
+            try {
+              const params = JSON.parse(e.target.result);  // 파일의 내용을 JSON으로 파싱합니다.
+              saveParamState(params);  // 파싱한 데이터를 저장합니다.
+              updateVisualization(params);  // 시각화를 업데이트합니다.
+            } catch (error) {
+              console.error('Error parsing parameter file:', error);  // 파일 파싱 중 에러가 나면 콘솔에 출력합니다.
+              alert('파라미터 파일 형식이 올바르지 않습니다.');  // 경고 메시지를 표시합니다.
+            }
+          };
+          reader.readAsText(file);  // 파일을 텍스트 형식으로 읽습니다.
+        }
+      }
+
+      // 시각화 업데이트
+      function updateVisualization(params) {
+        // 현재 Vega 시각화 사양(currentSpec)과 시각화 뷰(currentView)가 없으면 함수 종료
+        if (!currentSpec || !currentView) return;
+        
+        // currentSpec에서 정의된 파라미터들이 있다면
+        if (currentSpec.params) {
+          // 각 파라미터에 대해 새로운 값이 params에 있으면 그 값을 업데이트
+          currentSpec.params.forEach(param => {
+            if (params[param.name] !== undefined) {
+              param.value = params[param.name];  // 파라미터의 값을 params에서 가져온 값으로 설정
+            }
+          });
+        }
+
+        // 업데이트된 spec을 사용하여 시각화를 다시 렌더링
+        vegaEmbed('#vis', currentSpec,
+          {renderer: "canvas", hover: true, tooltip: true}).then(result => {
+          currentView = result.view;  // 시각화 뷰를 결과에서 가져옴
+
+          // 시그널 리스너를 다시 연결
+          if (currentSpec.params) {
+            currentSpec.params.forEach(param => {
+              // 특정 파라미터가 업데이트되면 이를 로컬 저장소에 저장하는 리스너 추가
+              currentView.addSignalListener(param.name, function(name, value) {
+                const currentState = loadParamState();  // 저장된 상태 로드
+                currentState[name] = value;  // 새로운 값으로 상태 업데이트
+                saveParamState(currentState);  // 업데이트된 상태 저장
+              });
+            });
+          }
+        });
+      }
+
+      // Vega Spec 로딩
+      function loadVegaSpec() {
+        // 'index.vl.json' 파일을 비동기적으로 가져옴
+        fetch('index.vl.json')
+          .then(response => response.json())  // JSON 형식으로 응답을 파싱
+          .then(spec => {
+            currentSpec = spec;  // 시각화 사양을 currentSpec에 저장
+            const savedState = loadParamState();  // 로컬 저장소에서 이전 파라미터 상태를 불러옴
+            
+            // spec에 파라미터들이 정의되어 있다면
+            if (spec.params) {
+              spec.params.forEach(param => {
+                // 저장된 상태에서 해당 파라미터의 값을 가져와서 spec에 설정
+                if (savedState[param.name] !== undefined) {
+                  param.value = savedState[param.name];  // 로컬 저장소에서 저장된 값으로 덮어씀
+                }
+              });
+            }
+
+            // 선택된 데이터 파일의 URL을 시각화 사양(spec)에 설정
+            spec.data.url = dataUrl;
+
+            // Vega Embed를 사용하여 시각화를 생성
+            vegaEmbed('#vis', spec)
+              .then(result => {
+                currentView = result.view;  // 시각화 결과로부터 뷰를 가져옴
+                console.log('Vega Embed Result:', result);  // 콘솔에 결과 출력
+                console.log('Vega View:', currentView);  // 콘솔에 뷰 객체 출력
+
+                // 시그널 리스너를 spec의 각 파라미터에 대해 추가
+                if (spec.params) {
+                  spec.params.forEach(param => {
+                    // 파라미터가 변경될 때마다 상태를 로컬 저장소에 저장하도록 리스너 추가
+                    currentView.addSignalListener(param.name, function(name, value) {
+                      const currentState = loadParamState();  // 현재 상태를 로드
+                      currentState[name] = value;  // 새로운 값으로 상태 업데이트
+                      saveParamState(currentState);  // 변경된 상태를 로컬 저장소에 저장
+                    });
+                  });
+                }
+              })
+              .catch(error => {
+                console.error('Vega Embed Error:', error);  // 시각화 생성 중 오류가 발생하면 콘솔에 오류 메시지 출력
+              });
+          })
+          .catch(error => {
+            console.error('Error loading JSON:', error);  // JSON 파일 로딩 중 오류가 발생하면 콘솔에 오류 메시지 출력
+          });
+      }
+
+      // 페이지 로딩 시 첫 번째 데이터로 시각화 로딩
+      loadVegaSpec();  // 페이지가 로드될 때 자동으로 첫 번째 데이터로 시각화를 생성
+    </script>
+  </body>
+</html>

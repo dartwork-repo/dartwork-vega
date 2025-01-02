@@ -1,0 +1,13 @@
+{
+  "lineWidth": 0.1,
+  "lineColor": "#300dde",
+  "lineType": "solid",
+  "viewWidth": 600,
+  "width": 250,
+  "yTitle": "Validation loss [%]",
+  "height": 180,
+  "xLabelFontSize": 12,
+  "bid": "0",
+  "bestColor": "#251bb1",
+  "worstColor": "#ff5900"
+}
